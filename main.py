@@ -1,6 +1,7 @@
 import requests
 import xml.etree.ElementTree as ET
 
+
 def main():
     cimc_check_certificate()
 
@@ -19,7 +20,7 @@ def cimc_get_cookies():
 
     login_request = requests.post(url="https://"+ip+"/nuova",data=body_credentials, verify= False)
     
-    xml = ET.fromstring(login_request.content)
+    xml = ET.fromstring(login_request.text)
 
     return xml.attrib["outCookie"]
 
@@ -36,9 +37,14 @@ def cimc_check_certificate():
     check_certificate_request = requests.post(url="https://10.97.39.42/nuova",data=body_check_certificate, verify= False)
 
     
-    xml_cert = ET.fromstring(check_certificate_request.content)
+    xml_cert = ET.fromstring(check_certificate_request.text)
     
-    print(xml_cert.attrib)
+    print(xml_cert.tag)
+
+    ##Conseguir pegar a data de validade do certificado e checar se ele ainda está valido. Fazer uma forma de deslogar da CIMC dps de fazer essas coisas pq a CIMC é uma merda.
 
 if __name__ == "__main__":
+
     main()
+
+    
