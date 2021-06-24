@@ -1,10 +1,14 @@
 import requests
 import xml.etree.ElementTree as ET
-
+from datetime import datetime
+import time
+import yaml
 
 def main():
-    cimc_check_certificate()
+    cimc_generate_certificate()
 
+def read_yaml_config():
+    cu = cu
 def cimc_get_cookies():
 
     credentials = {"Username":str(input("Username:")),
@@ -29,22 +33,74 @@ def cimc_check_certificate():
     cookie = cimc_get_cookies()
 
     body_check_certificate = '''<configResolveClass 
-                                cookie="{cookie}" 
+                                cookie="{}" 
                                 classId="currentCertificate" 
                                 inHierarchical="false">
-                                </configResolveClass>'''.format(cookie=cookie)
+                                </configResolveClass>'''.format(cookie)
 
     check_certificate_request = requests.post(url="https://10.97.39.42/nuova",data=body_check_certificate, verify= False)
 
     
-    xml_cert = ET.fromstring(check_certificate_request.text)
+    xml_date = ET.ElementTree(ET.fromstring(check_certificate_request.text))
     
-    print(xml_cert.tag)
+    
 
-    ##Conseguir pegar a data de validade do certificado e checar se ele ainda está valido. Fazer uma forma de deslogar da CIMC dps de fazer essas coisas pq a CIMC é uma merda.
+    for element in xml_date.iter('currentCertificate'):
+        date = element.attrib["validTo"]
+
+    return date
+
+def cimc_generate_certificate():
+
+     cookie = cimc_get_cookies()
+
+     body_generate_certificate = '''<configConfMo cookie='{}' 
+                                                    dn="sys/cert-mgmt/gen-csr-req" inHierarchical="false">
+	                                    <inConfig>
+	                                        <generateCertificateSigningRequest commonName="Banco do Brasil" organization="Banco do Brasil" 
+                                            organizationalUnit="Banco do Brasil" locality="Brazil" state="Brasilia" countryCode="Brazil" 
+                                            selfSigned="yes"  dn="sys/cert-mgmt/gen-csr-req"/>
+	                                    </inConfig>
+                                    </configConfMo>'''.format(cookie)
+    
+     certificate_request = requests.post(url="https://10.97.39.42/nuova",data=body_generate_certificate, verify= False)
+     
+     
+     
+     if certificate_request.status_code == 200:
+        
+        xml_cert_status = ET.ElementTree(ET.fromstring(certificate_request.text))
+     
+        for child in xml_cert_status.iterfind('./outConfig/'):
+            status = child.attrib["csrStatus"]
+            
+            
+        if status == "Completed CSR":
+            
+            check_cimc_up = requests.get(url = "https://10.97.39.42/login.html",verify= False)
+            
+
+            while check_cimc_up.status_code == 502:
+                print("Waiting for CIMC to generate Self-Signed Certificate...")
+                time.sleep(10)
+                check_cimc_up = requests.get(url = "https://10.97.39.42/login.html",verify= False)
+            
+            
+            if check_cimc_up.status_code == 200:
+                time.sleep(10)
+                date = cimc_check_certificate()
+                print("Done")
+            
+            return date
+                
+
+        
+
 
 if __name__ == "__main__":
 
     main()
 
-    
+
+
+ 

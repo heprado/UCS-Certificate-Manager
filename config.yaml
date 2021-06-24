@@ -1,0 +1,18 @@
+##This file contains all the configuration needed for the UCS Certificate Manager to generate a new self-signed certificate.
+
+
+config:
+  hosts:
+    - "10.97.39.42" #IP or FQDN of the CIMCs 
+
+
+
+
+  certificate:
+    commomName: "Banco do Brasil"  #Commom name used for the certificate request, any string
+    organization: "Banco do Brasil" #Organization used for the certificate request, any string
+    organizationalUnit: "TI" #Organizational unit used for the certificate request, any string
+    locality: "Brazil" #Locality used for the certificate request, any string
+    state: "Sao Paulo" #State used for the certificate request, any string
+    countryCode: "Brazil" #Country code used for the certificate request, use the name of the country in English
+  
