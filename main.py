@@ -3,12 +3,17 @@ import xml.etree.ElementTree as ET
 from datetime import datetime
 import time
 import yaml
+import os
+import getopt,sys.argv
 
 def main():
+    #Lembrar de adicionar um comando no args pra selecionar um yaml file
     cimc_generate_certificate()
 
-def read_yaml_config():
-    cu = cu
+def yaml():
+
+
+    with open({}).format()
 def cimc_get_cookies():
 
     credentials = {"Username":str(input("Username:")),
