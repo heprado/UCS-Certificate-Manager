@@ -4,27 +4,54 @@ import time
 import yaml
 import os
 import argparse
+import sys
+
 
 def main():
+
+    try:
+        credentials = yaml_read_config()["config"].get("credentials")
+    except:
+        print("You didn't put any credentials in the yaml file.")
+        sys.exit()
+
+    try:
+        certificate_config = yaml_read_config()["config"].get("certificate")
+    except:
+        print("You didn't put any certificate configuration in the yaml file.")
+
+
+    cookies = cimc_get_cookies(credentials)
+
+    print(cimc_generate_certificate(cookies,certificate_config,credentials))
+
     
-    cimc_check_certificate(cimc_get_cookies())
+   
+
 
 def menu():
 
     menu = argparse.ArgumentParser(description="This script generates a new self-signed certificate for the CIMC",
-                                    epilog="This program was made by Henrique Prado, if you have any problem with the script open a issue on https://github.com/Tidebinder ")
+                                   epilog="This program was made by Henrique Prado, if you have any problem with the script open a issue on https://github.com/Tidebinder ")
 
-    menu.add_argument("-f","--file",
+    menu.add_argument("-f", "--file",
                       action='store',
-                      metavar="file",      
+                      metavar="file",
                       type=str,
                       help="The full path or the name of the configuration YAML file, just use the name if the configuration file is in the same directory as the script"
-                     )
+                      )
+
+    menu.add_argument("-o", "--output",
+                      action='store',
+                      metavar="output",
+                      type=str,
+                      help="This will be the name of the output file with all the old certificates expiracy dates and new certificates expiracy dates"
+                      )
 
     args = menu.parse_args()
 
     return args
-    
+
 
 def yaml_read_config():
     file = menu().file
@@ -33,47 +60,53 @@ def yaml_read_config():
 
         try:
             with open("./{}".format(file), 'r') as f:
-                    print(file)
-                    yaml_file = yaml.safe_load(f)
-                    
+                yaml_file = yaml.safe_load(f)
+
         except:
             print("The file wasn't found")
-    
+
     if "/" in file:
 
         try:
             with open("{}".format(file), 'r') as f:
-                    print(file)
-                    yaml_file = yaml.safe_load(f)
-                    
+                yaml_file = yaml.safe_load(f)
+
         except:
             print("The file wasn't found")
 
     return yaml_file
-    
 
-def cimc_get_cookies():
+def yaml_write_config(old_expiracy_date,new_expiracy_date):
+    
+    full = {}
+    file_name = menu().output
+    full["out_config"] = {**old_expiracy_date,**new_expiracy_date}
 
     try:
-        credentials = yaml_read_config()["config"].get("credentials")
+        with open("./{}".format(file_name), 'w') as f:
+            yaml_convert = yaml.dump(full,f,default_flow_style=False)
     except:
-        print("You didn't put any credentials in the yaml file.")
+        print("ahnn")
+
+
+def cimc_get_cookies(credentials):
 
     body_credentials = '''<aaaLogin
         inName='{username}'
         inPassword='{password}'>
-        </aaaLogin>'''.format(username = credentials["username"],password = credentials["password"])
+        </aaaLogin>'''.format(username=credentials["username"], password=credentials["password"])
 
     hosts = yaml_read_config()["config"].get("hosts")
 
     cookies_dict = {}
     for cimcs in hosts:
         print("Getting the CIMC cookie for {}".format(cimcs))
-        
-        login_request = requests.post(url="https://"+cimcs+"/nuova",data=body_credentials, verify= False)
+
+        login_request = requests.post(
+            url="https://"+cimcs+"/nuova", data=body_credentials, verify=False)
 
         if login_request.status_code == 200:
-            
+
             try:
                 xml = ET.fromstring(login_request.text)
                 cookie = xml.attrib["outCookie"]
@@ -82,18 +115,15 @@ def cimc_get_cookies():
             except KeyError:
                 print("Could not get Cookie for CIMC {}".format(cimcs))
 
-        else :
+        else:
             print("The API of the CIMC {} is not available".format(cimcs))
-        
-    
+
     return cookies_dict
 
-   
 
 def cimc_check_certificate(cookies_dict):
 
-    
-    for cimc,cookie in cookies_dict.items():
+    for cimc, cookie in cookies_dict.items():
 
         body_check_certificate = '''<configResolveClass 
                                     cookie="{}" 
@@ -101,71 +131,107 @@ def cimc_check_certificate(cookies_dict):
                                     inHierarchical="false">
                                     </configResolveClass>'''.format(cookie)
 
-        check_certificate_request = requests.post(url="https://"+cimc+"/nuova",data=body_check_certificate, verify= False)
+        check_certificate_request = requests.post(
+            url="https://"+cimc+"/nuova", data=body_check_certificate, verify=False)
 
-        
-        xml_date = ET.ElementTree(ET.fromstring(check_certificate_request.text))
-        
-        ##Atualizar a CIMC da UCS 10.97.39.44 porque se nao não consigo pegar o status do certificado
+        xml_date = ET.ElementTree(
+            ET.fromstring(check_certificate_request.text))
+
+        date = {}
 
         for element in xml_date.iter('currentCertificate'):
-            date = element.attrib["validTo"]
-            print(date)
+            date["old_expiracy_date"] = {
+                "{}".format(cimc): element.attrib["validTo"]}
+
+    return date
+
+
+def cimc_generate_certificate(cookies_dict,certificate_config,credentials):
 
     
-    
 
-def cimc_generate_certificate():
+    for cimc, cookie in cookies_dict.items():
 
-     cookie = cimc_get_cookies()
+        body_generate_certificate = '''<configConfMo cookie='{cookie}' 
+                                                        dn="sys/cert-mgmt/gen-csr-req" inHierarchical="false">
+                                            <inConfig>
+                                                <generateCertificateSigningRequest commonName="{commonName}" organization="{organization}" 
+                                                organizationalUnit="{organizationalUnit}" locality="{locality}" state="{state}" countryCode="{countryCode}" 
+                                                selfSigned="yes"  dn="sys/cert-mgmt/gen-csr-req"/>
+                                            </inConfig>
+                                        </configConfMo>'''.format(cookie=cookie,
+                                                                  commonName=certificate_config["commonName"],
+                                                                  organization=certificate_config["organization"],
+                                                                  organizationalUnit=certificate_config["organizationalUnit"],
+                                                                  locality=certificate_config["locality"],
+                                                                  state=certificate_config["state"],
+                                                                  countryCode=certificate_config["countryCode"])
 
-     body_generate_certificate = '''<configConfMo cookie='{}' 
-                                                    dn="sys/cert-mgmt/gen-csr-req" inHierarchical="false">
-	                                    <inConfig>
-	                                        <generateCertificateSigningRequest commonName="Banco do Brasil" organization="Banco do Brasil" 
-                                            organizationalUnit="Banco do Brasil" locality="Brazil" state="Brasilia" countryCode="Brazil" 
-                                            selfSigned="yes"  dn="sys/cert-mgmt/gen-csr-req"/>
-	                                    </inConfig>
-                                    </configConfMo>'''.format(cookie)
-    
-     certificate_request = requests.post(url="https://10.97.39.42/nuova",data=body_generate_certificate, verify= False)
-     
-     
-     
-     if certificate_request.status_code == 200:
-        
-        xml_cert_status = ET.ElementTree(ET.fromstring(certificate_request.text))
-     
-        for child in xml_cert_status.iterfind('./outConfig/'):
-            status = child.attrib["csrStatus"]
-            
-            
-        if status == "Completed CSR":
-            
-            check_cimc_up = requests.get(url = "https://10.97.39.42/login.html",verify= False)
-            
-
-            while check_cimc_up.status_code == 502:
-                print("Waiting for CIMC to generate Self-Signed Certificate...")
-                time.sleep(10)
-                check_cimc_up = requests.get(url = "https://10.97.39.42/login.html",verify= False)
-            
-            
-            if check_cimc_up.status_code == 200:
-                time.sleep(10)
-                date = cimc_check_certificate()
-                print("Done")
-            
-            return date
-                
+        certificate_request = requests.post(
+            url="https://"+cimc+"/nuova", data=body_generate_certificate, verify=False)
 
         
 
+        if certificate_request.status_code == 200:
 
+            xml_cert_status = ET.ElementTree(
+                ET.fromstring(certificate_request.text))
+
+            for child in xml_cert_status.iterfind('./outConfig/'):
+                status = child.attrib["csrStatus"]
+
+            if status == "Completed CSR":
+
+                check_cimc_up = requests.get(
+                    url="https://"+cimc+"/login.html", verify=False)
+
+                while check_cimc_up.status_code == 502:
+                    print("Waiting for CIMC to generate Self-Signed Certificate...")
+                    time.sleep(10)
+                    check_cimc_up = requests.get(
+                        url="https://"+cimc+"/login.html", verify=False)
+
+                if check_cimc_up.status_code == 200:
+                    time.sleep(10)
+                    for cimc, cookie in cimc_get_cookies(credentials).items():
+                        
+                        
+                        body_check_certificate = '''<configResolveClass 
+                                        cookie="{}" 
+                                        classId="currentCertificate" 
+                                        inHierarchical="false">
+                                        </configResolveClass>'''.format(cookie)
+
+                            
+                        check_certificate_request = requests.post(
+                            url="https://"+cimc+"/nuova", data=body_check_certificate, verify=False)
+                        
+                        xml_date = ET.ElementTree(
+                            ET.fromstring(check_certificate_request.text))
+
+                        date = {}
+
+                        for element in xml_date.iter('currentCertificate'):
+                            
+                            date["new_expiracy_date"] = {"{}".format(cimc): element.attrib["validTo"]}
+    return date
+
+
+def refresh_cimc_cookie(cookies_dict,credentials):
+
+    for cimc, cookie in cookies_dict.items():
+        body_refresh_cimc_cookie = '''<aaaRefresh
+                                      cookie="{cookie}"
+                                      inCookie="{cookie}"
+                                      inName='{username}'
+                                      inPassword='{password}'>
+                                      </aaaRefresh>'''.format(cookie = cookie, username=credentials["username"], password=credentials["password"])
+
+        refresh_cimc_cookie_request =  requests.post(
+            url="https://"+cimc+"/nuova", data=body_refresh_cimc_cookie, verify=False)
+
+        print(refresh_cimc_cookie_request.text)
+    
 if __name__ == "__main__":
 
     main()
-
-
-
- 
