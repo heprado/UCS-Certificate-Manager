@@ -7,7 +7,7 @@ config:
     password: "1234Qwer"
   hosts:
     - "10.97.39.42" #IP or FQDN of the CIMCs, don't put "https:// or http://"
-    
+    - "10.97.39.40"
 
 
 

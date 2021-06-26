@@ -23,7 +23,13 @@ def main():
 
     cookies = cimc_get_cookies(credentials)
 
-    print(cimc_generate_certificate(cookies,certificate_config,credentials))
+    old_expiracy_date = cimc_check_certificate(cookies)
+
+    new_expiracy_date = cimc_generate_certificate(cookies,certificate_config,credentials)
+
+    yaml_write_config(old_expiracy_date,new_expiracy_date)
+    
+    
 
     
    
@@ -122,7 +128,7 @@ def cimc_get_cookies(credentials):
 
 
 def cimc_check_certificate(cookies_dict):
-
+    date = {"old_expiracy_date" : {}}
     for cimc, cookie in cookies_dict.items():
 
         body_check_certificate = '''<configResolveClass 
@@ -137,18 +143,18 @@ def cimc_check_certificate(cookies_dict):
         xml_date = ET.ElementTree(
             ET.fromstring(check_certificate_request.text))
 
-        date = {}
+        
 
         for element in xml_date.iter('currentCertificate'):
-            date["old_expiracy_date"] = {
-                "{}".format(cimc): element.attrib["validTo"]}
+            date["old_expiracy_date"].update({"{}".format(cimc):element.attrib["validTo"]})
+                
 
     return date
 
 
 def cimc_generate_certificate(cookies_dict,certificate_config,credentials):
 
-    
+    date = {"new_expiracy_date": {}}
 
     for cimc, cookie in cookies_dict.items():
 
@@ -209,28 +215,15 @@ def cimc_generate_certificate(cookies_dict,certificate_config,credentials):
                         xml_date = ET.ElementTree(
                             ET.fromstring(check_certificate_request.text))
 
-                        date = {}
+                        
 
                         for element in xml_date.iter('currentCertificate'):
                             
-                            date["new_expiracy_date"] = {"{}".format(cimc): element.attrib["validTo"]}
+                            date["new_expiracy_date"].update({"{}".format(cimc): element.attrib["validTo"]})
     return date
 
 
-def refresh_cimc_cookie(cookies_dict,credentials):
 
-    for cimc, cookie in cookies_dict.items():
-        body_refresh_cimc_cookie = '''<aaaRefresh
-                                      cookie="{cookie}"
-                                      inCookie="{cookie}"
-                                      inName='{username}'
-                                      inPassword='{password}'>
-                                      </aaaRefresh>'''.format(cookie = cookie, username=credentials["username"], password=credentials["password"])
-
-        refresh_cimc_cookie_request =  requests.post(
-            url="https://"+cimc+"/nuova", data=body_refresh_cimc_cookie, verify=False)
-
-        print(refresh_cimc_cookie_request.text)
     
 if __name__ == "__main__":
 
