@@ -7,7 +7,6 @@ import argparse
 import sys
 import urllib3
 
-
 first = True
 
 cookies = {}
