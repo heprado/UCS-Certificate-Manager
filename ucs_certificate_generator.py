@@ -5,10 +5,18 @@ import yaml
 import os
 import argparse
 import sys
+import urllib3
 
+
+first = True
+
+cookies = {}
 
 def main():
 
+    global cookies
+
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     try:
         credentials = yaml_read_config()["config"].get("credentials")
     except:
@@ -21,11 +29,11 @@ def main():
         print("You didn't put any certificate configuration in the yaml file.")
 
 
-    cookies = cimc_get_cookies(credentials)
+    cookies.update(cimc_get_cookies(credentials)) 
 
-    old_expiracy_date = cimc_check_certificate(cookies)
+    old_expiracy_date = cimc_check_certificate()
 
-    new_expiracy_date = cimc_generate_certificate(cookies,certificate_config,credentials)
+    new_expiracy_date = cimc_generate_certificate(certificate_config,credentials)
 
     yaml_write_config(old_expiracy_date,new_expiracy_date)
     
@@ -97,6 +105,8 @@ def yaml_write_config(old_expiracy_date,new_expiracy_date):
 
 def cimc_get_cookies(credentials):
 
+    global first
+
     body_credentials = '''<aaaLogin
         inName='{username}'
         inPassword='{password}'>
@@ -105,32 +115,61 @@ def cimc_get_cookies(credentials):
     hosts = yaml_read_config()["config"].get("hosts")
 
     cookies_dict = {}
-    for cimcs in hosts:
-        print("Getting the CIMC cookie for {}".format(cimcs))
+    if first == True :
+        for cimcs in hosts:
+            
+            print("Getting the CIMC cookie for {}".format(cimcs))
 
-        login_request = requests.post(
-            url="https://"+cimcs+"/nuova", data=body_credentials, verify=False)
+            login_request = requests.post(
+                url="https://"+cimcs+"/nuova", data=body_credentials, verify=False)
 
-        if login_request.status_code == 200:
+            if login_request.status_code == 200:
 
-            try:
-                xml = ET.fromstring(login_request.text)
-                cookie = xml.attrib["outCookie"]
-                cookies_dict[cimcs] = cookie
-                print("Done!")
-            except KeyError:
-                print("Could not get Cookie for CIMC {}".format(cimcs))
+                try:
+                    xml = ET.fromstring(login_request.text)
+                    cookie = xml.attrib["outCookie"]
+                    cookies_dict[cimcs] = cookie
+                    first = False
+                    print("Done!")
+                except KeyError:
+                    print("Could not get Cookie for CIMC {}".format(cimcs))
 
-        else:
-            print("The API of the CIMC {} is not available".format(cimcs))
+            else:
+                print("The API of the CIMC {} is not available".format(cimcs))
 
-    return cookies_dict
+        return cookies_dict
+
+    else:
+        for cimcs in hosts:
+            print("Refreshing the CIMC cookie for {}".format(cimcs))
+
+            login_request = requests.post(
+                url="https://"+cimcs+"/nuova", data=body_credentials, verify=False)
+
+            if login_request.status_code == 200:
+
+                try:
+                    xml = ET.fromstring(login_request.text)
+                    cookie = xml.attrib["outCookie"]
+                    cookies_dict[cimcs] = cookie
+                    first = True
+                    print("Done!")
+                except KeyError:
+                    print("Could not get Cookie for CIMC {}".format(cimcs))
+
+            else:
+                print("The API of the CIMC {} is not available".format(cimcs))
+
+        return cookies_dict
 
 
-def cimc_check_certificate(cookies_dict):
+def cimc_check_certificate():
+
+    global cookies
+
     date = {"old_expiracy_date" : {}}
-    for cimc, cookie in cookies_dict.items():
-
+    for cimc, cookie in cookies.items():
+        print("Getting the old expiracy date for CIMC {}".format(cimc))
         body_check_certificate = '''<configResolveClass 
                                     cookie="{}" 
                                     classId="currentCertificate" 
@@ -147,17 +186,21 @@ def cimc_check_certificate(cookies_dict):
 
         for element in xml_date.iter('currentCertificate'):
             date["old_expiracy_date"].update({"{}".format(cimc):element.attrib["validTo"]})
+            print("Done getting the old expiracy date for {}".format(cimc))
                 
 
     return date
 
 
-def cimc_generate_certificate(cookies_dict,certificate_config,credentials):
+def cimc_generate_certificate(certificate_config,credentials):
+
+    global cookies
+    global first
 
     date = {"new_expiracy_date": {}}
 
-    for cimc, cookie in cookies_dict.items():
-
+    for cimc, cookie in cookies.items():
+        print("Generating a new self-signed certificate for CIMC {}".format(cimc))
         body_generate_certificate = '''<configConfMo cookie='{cookie}' 
                                                         dn="sys/cert-mgmt/gen-csr-req" inHierarchical="false">
                                             <inConfig>
@@ -192,14 +235,17 @@ def cimc_generate_certificate(cookies_dict,certificate_config,credentials):
                     url="https://"+cimc+"/login.html", verify=False)
 
                 while check_cimc_up.status_code == 502:
-                    print("Waiting for CIMC to generate Self-Signed Certificate...")
+                    print("Waiting for CIMC {} to respond...".format(cimc))
                     time.sleep(10)
                     check_cimc_up = requests.get(
                         url="https://"+cimc+"/login.html", verify=False)
 
                 if check_cimc_up.status_code == 200:
+                    print("Done")
+                    print("Getting new expiracy date for CIMC {}".format(cimc))
                     time.sleep(10)
-                    for cimc, cookie in cimc_get_cookies(credentials).items():
+                    cookies = (cimc_get_cookies(credentials).items())
+                    for cimc, cookie in cookies:
                         
                         
                         body_check_certificate = '''<configResolveClass 
@@ -220,6 +266,9 @@ def cimc_generate_certificate(cookies_dict,certificate_config,credentials):
                         for element in xml_date.iter('currentCertificate'):
                             
                             date["new_expiracy_date"].update({"{}".format(cimc): element.attrib["validTo"]})
+                            print("Done getting the new expiracy date for {}".format(cimc))
+
+                            first = False
     return date
 
 
