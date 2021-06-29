@@ -52,7 +52,7 @@ If you have any problem with the script open a issue on https://github.com/Tideb
 
 #### Exemplo config.yaml
 ```yaml
-~~~
+
 config:
   credentials:
     username: "admin" #Usuário que será utilizado para autenticar com a CIMC
@@ -74,17 +74,17 @@ config:
     locality: "Brazil" #locality que será usado para gerar o certificado auto-assinado, qualquer string
     state: "Sao Paulo" #State que será usado para gerar o certificado auto-assinado, qualquer string
     countryCode: "Brazil" ##countryCode que será usado para gerar o certificado auto-assinado, utilize o nome do país em Inglês 
-~~~
+
 ```
 
 #### Exemplo "output.yaml"
 
 ```yaml
-~~~
+
 out_config:
   new_expiracy_date:
     10.97.39.42: Jun 28 17:48:30 2026 GMT
   old_expiracy_date:
     10.97.39.42: Jun 28 17:47:03 2026 GMT
-~~~
+
 ```
