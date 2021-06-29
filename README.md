@@ -18,22 +18,22 @@ UCS Certificate Manager isé um script em python feito para gerar outro certific
 Para usar o UCS Certificate Manager basta chamarmos o script e passarmos o arquivo de configuração YAML, no arquivo [config.yaml](../main/config.yaml) que está na raiz do reposítorio possuimos um exemplo de como preencher ele.
 
 Precisamos especificar o arquivo de saida também, segue abaixo exemplo:
-~~~
+```bash
  ucs_certificate_generator.py -f config.yaml -o output.yaml
-~~~
+```
 O **"output.yaml"** vai ser salvo no mesmo diretório em que o script for executado.
 
 Também podemos utilizar o -h para obtermos ajuda:
 
 #### Executando ajuda
 
-~~~
+```bash
  ucs_certificate_generator.py -h
-~~~
+```
 
 #### Output 
 
-~~~
+```bash
 usage: ucs_certificate_generator.py [-h] [-f file] [-o output]
 
 This script generates a new self-signed certificate for the CIMC
@@ -45,8 +45,7 @@ optional arguments:
                         This will be the name of the output file with all the old certificates expiracy dates and new certificates expiracy dates
 
 If you have any problem with the script open a issue on https://github.com/Tidebinder, or make your own pull request
-~~~
-
+```
 
 ### YAML
 
