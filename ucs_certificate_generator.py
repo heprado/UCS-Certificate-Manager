@@ -45,7 +45,7 @@ def main():
 def menu():
 
     menu = argparse.ArgumentParser(description="This script generates a new self-signed certificate for the CIMC",
-                                   epilog="This program was made by Henrique Prado, if you have any problem with the script open a issue on https://github.com/Tidebinder ")
+                                   epilog="If you have any problem with the script open a issue on https://github.com/Tidebinder, or make your own pull request")
 
     menu.add_argument("-f", "--file",
                       action='store',
