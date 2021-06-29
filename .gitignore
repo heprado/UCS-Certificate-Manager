@@ -127,9 +127,5 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-<<<<<<< HEAD
-.vscode/
-=======
->>>>>>> 4ec357eb954fa4bb4fff82097804f11a817653dd
 UCS-Certificate-Manager.code-workspace
 .vscode/
