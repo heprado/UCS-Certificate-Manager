@@ -94,12 +94,18 @@ def yaml_write_config(old_expiracy_date,new_expiracy_date):
     full = {}
     file_name = menu().output
     full["out_config"] = {**old_expiracy_date,**new_expiracy_date}
-
-    try:
-        with open("./{}".format(file_name), 'w') as f:
-            yaml_convert = yaml.dump(full,f,default_flow_style=False)
-    except:
-        print("ahnn")
+    if ".yaml" in file_name:
+        try:
+            with open("./{}".format(file_name), 'w') as f:
+                yaml_convert = yaml.dump(full,f,default_flow_style=False)
+        except:
+            print("Couldn't save the output yaml file.")
+    if ".yaml" not in file_name:
+        try:
+            with open("./{}.yaml".format(file_name), 'w') as f:
+                yaml_convert = yaml.dump(full,f,default_flow_style=False)
+        except:
+            print("Couldn't save the output yaml file.")
 
 
 def cimc_get_cookies(credentials):
