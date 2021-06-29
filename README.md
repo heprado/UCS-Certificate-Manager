@@ -8,7 +8,10 @@ UCS Certificate Manager é um script em python feito para gerar outro certificad
 
 2. Use o pip para istalar as bibliotecas necessárias.
 
-  **pip istall -r requirements.txt**
+~~~
+pip install -r requirements.txt**
+~~~
+
 
 ## Como usar
 
