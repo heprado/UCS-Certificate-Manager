@@ -1,6 +1,6 @@
 # UCS Certificate Manager
 
-UCS Certificate Manager isé um script em python feito para gerar outro certificado auto-assinado de uma ou diversas CIMCs simultaneamente.
+UCS Certificate Manager é um script em python feito para gerar outro certificado auto-assinado de uma ou diversas CIMCs simultaneamente.
 
 ## Instalação
 
