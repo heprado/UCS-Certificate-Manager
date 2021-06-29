@@ -50,5 +50,38 @@ If you have any problem with the script open a issue on https://github.com/Tideb
 
 ### YAML
 
+#### Exemplo config.yaml
+
+~~~
+config:
+  credentials:
+    username: "admin" #Usuário que será utilizado para autenticar com a CIMC
+    password: "1234Qwer" #Senha que será utilizada para autenticar com a CIMC
+  hosts:
+    - "10.97.39.42" #IP ou FQDN das CIMCs, não coloque "https:// or http://"
+    # Podemos adicionar mais IPs ou FQDNs nessa lista, exemplos:
+    # -"10.97.39.40"
+    # -"paranoid-void-cimc.cisco.com
+
+    
 
 
+
+  certificate:
+    commonName: "Cisco"  #Commom name que será usado para gerar o certificado auto-assinado, qualquer string
+    organization: "Cisco" #organization que será usada para gerar o certificado auto-assinado, qualquer string
+    organizationalUnit: "TI" #organizationalUnit que será usado para gerar o certificado auto-assinado, qualquer string
+    locality: "Brazil" #locality que será usado para gerar o certificado auto-assinado, qualquer string
+    state: "Sao Paulo" #State que será usado para gerar o certificado auto-assinado, qualquer string
+    countryCode: "Brazil" ##countryCode que será usado para gerar o certificado auto-assinado, utilize o nome do país em Inglês 
+~~~
+
+#### Exemplo "output.yaml"
+
+~~~
+out_config:
+  new_expiracy_date:
+    10.97.39.42: Jun 28 17:48:30 2026 GMT
+  old_expiracy_date:
+    10.97.39.42: Jun 28 17:47:03 2026 GMT
+~~~

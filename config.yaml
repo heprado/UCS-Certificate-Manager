@@ -3,19 +3,22 @@
 
 config:
   credentials:
-    username: "admin"
-    password: "1234Qwer"
+    username: "admin" #Usuário que será utilizado para autenticar com a CIMC
+    password: "1234Qwer" #Senha que será utilizada para autenticar com a CIMC
   hosts:
-    - "10.97.39.42" #IP or FQDN of the CIMCs, don't put "https:// or http://"
+    - "10.97.39.42" #IP ou FQDN das CIMCs, não coloque "https:// or http://"
+    # Podemos adicionar mais IPs ou FQDNs nessa lista, exemplos:
+    # -"10.97.39.40"
+    # -"paranoid-void-cimc.cisco.com
+
     
 
 
 
   certificate:
-    commonName: "Banco do Brasil"  #Commom name used for the certificate request, any string
-    organization: "Banco do Brasil" #Organization used for the certificate request, any string
-    organizationalUnit: "TI" #Organizational unit used for the certificate request, any string
-    locality: "Brazil" #Locality used for the certificate request, any string
-    state: "Sao Paulo" #State used for the certificate request, any string
-    countryCode: "Brazil" #Country code used for the certificate request, use the name of the country in English
-  
+    commonName: "Cisco"  #Commom name que será usado para gerar o certificado auto-assinado, qualquer string
+    organization: "Cisco" #organization que será usada para gerar o certificado auto-assinado, qualquer string
+    organizationalUnit: "TI" #organizationalUnit que será usado para gerar o certificado auto-assinado, qualquer string
+    locality: "Brazil" #locality que será usado para gerar o certificado auto-assinado, qualquer string
+    state: "Sao Paulo" #State que será usado para gerar o certificado auto-assinado, qualquer string
+    countryCode: "Brazil" ##countryCode que será usado para gerar o certificado auto-assinado, utilize o nome do país em Inglês
