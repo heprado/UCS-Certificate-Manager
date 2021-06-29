@@ -1,8 +1,8 @@
 # UCS Certificate Manager
 
-Foobar é um script em python feito para gerar outro certificado auto-assinado de uma ou diversas CIMCs simultaneamente.
+UCS Certificate Manager isé um script em python feito para gerar outro certificado auto-assinado de uma ou diversas CIMCs simultaneamente.
 
-## Installation
+## Instalação
 
 - Faça download ou clone o repositório.
 
@@ -10,17 +10,10 @@ Foobar é um script em python feito para gerar outro certificado auto-assinado d
 
   **pip istall -r requirements.txt**
 
-## Usage
+## Como usar
 
-```python
-import foobar
+### YAML
 
-foobar.pluralize('word') # returns 'words'
-foobar.pluralize('goose') # returns 'geese'
-foobar.singularize('phenomena') # returns 'phenomenon'
+
 ```
 
-## Contributing
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
-
-Please make sure to update tests as appropriate.
